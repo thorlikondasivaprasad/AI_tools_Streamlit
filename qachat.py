@@ -1,8 +1,14 @@
 import streamlit as st
 import google.generativeai as genai
 import re
-# Retrieve the API key directly from Streamlit secrets
-GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from the .env file
+load_dotenv()
+
+# Retrieve the API key from environment variables
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 # Check if the API key is loaded correctly
 if GOOGLE_API_KEY:
@@ -29,8 +35,8 @@ def get_gemini_response(question):
     return clean_response(full_response.strip())
 
 # Initialize Streamlit app
-st.sidebar.title("AI🤖 Store🧰")
-page = st.sidebar.selectbox("Gen AI Tools", ["Q&A GPT","AI Code Generator","AI Text Summarizer"])
+st.sidebar.title("AI 🤖 Store 🧰")
+page = st.sidebar.selectbox("Gen AI Tools", ["Q&A GPT","AI Code Generator","Code Converter","AI Text Summarizer"])
 
 if page == "Q&A GPT":
     st.title(f"Welcome to Q&A Chatbot 🤖")
@@ -71,6 +77,31 @@ elif page == "AI Code Generator":
             full_response += chunk.text + " "
         # Display the generated code in a code block
         st.code(full_response, language=language)
+        
+elif page == "Code Converter":
+    st.title(f"Welcome to the Code Converter 🔄")
+
+    # Input fields for source and target languages, and the code snippet
+    source_language = st.selectbox("Select Source Language:", ["Python", "JavaScript", "C++", "Java", "Go"])
+    target_language = st.selectbox("Select Target Language:", ["JavaScript","Python","C++", "Java", "Go"])
+    code_snippet = st.text_area("Enter your code snippet:")
+
+    # Button to trigger the conversion process
+    convert = st.button("Convert Code")
+
+    if convert and code_snippet:
+        # Construct the prompt for Gemini Pro
+        code_prompt = f"Convert the following {source_language} code to {target_language}: ``` {code_snippet}```"
+
+        # Send the prompt to Gemini Pro and get the response
+        response = chat.send_message(code_prompt, stream=True)
+        full_response = ""
+        for chunk in response:
+            full_response += chunk.text + " "
+
+        # Display the converted code in a code block
+        st.code(full_response, language=target_language)
+        
       
 elif page == "AI Text Summarizer":
     st.title(f"Welcome to the AI Text Summarizer")
